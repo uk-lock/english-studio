@@ -6,7 +6,7 @@ GPT Site側でアプリ（UI）を作る人・その作成を手伝うAI向け�
 
 - DB: Neon（PostgreSQL）
 - 利用者は1人（ユーザーテーブルなし）
-- 記事（`english_texts`）と文（`sentences`）はローカルバッチが登録。GPT Siteは読むだけ
+- 記事（`english_texts`）と文（`sentences`）はローカルバッチが登録。GPT Siteは読み出しに加え、`english_texts`の`read_at`（読了）・`is_deleted`（記事削除）の更新のみ可
 - アプリからLLMは呼ばない。単語の意味（`vocabulary_notebook.meaning`）は後からバッチが埋める
 
 ## 共通ルール
@@ -20,7 +20,7 @@ GPT Site側でアプリ（UI）を作る人・その作成を手伝うAI向け�
 
 | テーブル | 用途 | 書き込み担当 |
 |---|---|---|
-| `english_texts` | 記事 | バッチ |
+| `english_texts` | 記事 | バッチ（登録）、GPT Site（`read_at`・`is_deleted`のみ） |
 | `sentences` | 文（英文と和訳） | バッチ |
 | `vocabulary_notebook` | 単語帳 | GPT Site（追加）、バッチ（`meaning`の補完のみ） |
 | `study_sessions` | 学習時間 | GPT Site |
@@ -28,7 +28,7 @@ GPT Site側でアプリ（UI）を作る人・その作成を手伝うAI向け�
 
 ### english_texts（記事）
 
-書き込み: バッチ。
+書き込み: バッチが登録、GPT Siteが`read_at`（読了管理）・`is_deleted`（記事の論理削除）のみ更新。その他のカラムは登録後に更新しない。
 
 | カラム | 型 | 説明 |
 |---|---|---|
@@ -38,6 +38,7 @@ GPT Site側でアプリ（UI）を作る人・その作成を手伝うAI向け�
 | `genre` | `TEXT NOT NULL` | ジャンル |
 | `english_text` | `TEXT NOT NULL` | 英文全文。改行が段落区切り |
 | `word_count` | `INTEGER NOT NULL` | 語数 |
+| `read_at` | `timestamptz NULL` | 読了日時。NULLは未読。GPT Siteが更新 |
 | `is_deleted` | `BOOLEAN NOT NULL DEFAULT false` | 論理削除フラグ |
 | `created_at` | `timestamptz NOT NULL DEFAULT now()` | 登録日時 |
 
@@ -111,10 +112,29 @@ GPT Site側でアプリ（UI）を作る人・その作成を手伝うAI向け�
 ### 記事一覧
 
 ```sql
-SELECT id, title, level, genre, word_count
+SELECT id, title, level, genre, word_count, read_at
 FROM english_texts
 WHERE is_deleted = false
 ORDER BY id;
+```
+
+### 読了にする・未読に戻す
+
+`$1`: 記事ID。
+
+```sql
+-- 読了にする
+UPDATE english_texts SET read_at = now() WHERE id = $1;
+-- 未読に戻す
+UPDATE english_texts SET read_at = NULL WHERE id = $1;
+```
+
+### 記事を削除する
+
+`$1`: 記事ID。文・しおり・学習時間の行は触らない（読み出し時に記事側の`is_deleted`で除外される）。
+
+```sql
+UPDATE english_texts SET is_deleted = true WHERE id = $1;
 ```
 
 ### 記事の文を段落ごとに取得
@@ -241,7 +261,7 @@ SELECT paragraph_no FROM bookmarks WHERE text_id = $1 AND is_deleted = false;
 
 ## やってはいけないこと
 
-- `english_texts`・`sentences`の更新・削除: 単語帳の`sentence_ids`が文IDを参照しており、IDが変わると参照が壊れる
+- `english_texts`の`read_at`・`is_deleted`以外の更新、`sentences`の更新・削除: 単語帳の`sentence_ids`が文IDを参照しており、IDが変わると参照が壊れる
 - 物理削除（`DELETE`）: 削除は必ず`is_deleted = true`で行う
 - `vocabulary_notebook.meaning`の上書き: バッチが埋める
 

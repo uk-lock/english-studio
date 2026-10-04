@@ -55,15 +55,16 @@
 
 ## DB
 
-- スキーマ: `src/models/tables.py`（`english_texts`・`sentences`・`vocabulary_notebook`・`study_sessions`・
-  `bookmarks`（しおり。1記事につき0〜1件、GPT Siteが書き込む））。
+- スキーマ: `src/models/tables.py`（`english_texts`（読了日時`read_at`はGPT Siteが更新）・`sentences`・
+  `vocabulary_notebook`・`study_sessions`・`bookmarks`（しおり。1記事につき0〜1件、GPT Siteが書き込む））。
   全テーブルに論理削除フラグ`is_deleted`があり、物理削除しない。
 - マイグレーション: Alembic（`src/migrations/`）。スキーマ変更時の手順:
   1. `src/models/`を編集する
   2. `make db-revision MSG="..."`を実行する
   3. 生成されたマイグレーションファイルを確認する
   4. `make db-upgrade`を実行する
-- 登録済みの記事・文は単語帳の`sentence_ids`から参照されるため、更新・再登録しない。
+- 登録済みの記事・文は単語帳の`sentence_ids`から参照されるため、更新・再登録しない。例外として`english_texts`の
+  `read_at`（読了管理）・`is_deleted`（記事の論理削除）はGPT Siteが更新する。
 
 ## Python コーディング規約（lint / format）
 

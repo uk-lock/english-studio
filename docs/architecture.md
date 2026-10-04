@@ -25,7 +25,7 @@ English Studio全体の設計と、その理由。セットアップ・使い方
          ▼
    Neon (PostgreSQL)
          ▲
-         │ 読み書き（記事閲覧、単語帳追加、学習時間・しおり）
+         │ 読み書き（記事閲覧・読了・削除、単語帳追加、学習時間・しおり）
    GPT Site（UI）
 ```
 
@@ -52,7 +52,7 @@ subagent（`article-writer`等）は`.claude/agents/*.md`と`.codex/agents/*.tom
 |---|---|
 | 単一ユーザー前提（ユーザーテーブルなし） | 利用者は自分1人のため |
 | 全テーブル論理削除（`is_deleted`）、物理削除しない | 単語帳の`sentence_ids`等からの参照を壊さないため。読み出しは常に`is_deleted = false`で絞る |
-| 登録済みの記事・文は更新しない | `vocabulary_notebook.sentence_ids`が`sentences.id`を参照しており、再登録でIDが変わると参照が壊れるため |
+| 登録済みの記事・文は更新しない（例外: `english_texts`の`read_at`・`is_deleted`はGPT Siteが更新） | `vocabulary_notebook.sentence_ids`が`sentences.id`を参照しており、再登録でIDが変わると参照が壊れるため。読了管理・記事の論理削除はIDを変えないため許可 |
 | 同タイトル（未削除）の記事は登録拒否 | 上記により上書きができないため。`title`に`NOT is_deleted`条件の部分ユニークインデックス |
 | 単語の意味は登録時に埋めず、後からバッチで補完（`meaning IS NULL`が対象） | GPT SiteからLLMを呼ばないため |
 | `word`は小文字・見出し語化なし・ユニーク（削除済み含む） | `running`と`run`は別単語扱い。削除済みの再追加は新規行を作らず`is_deleted`を戻す（upsert） |

@@ -1,7 +1,8 @@
 """DBスキーマ定義。変更後は `make db-revision MSG="..."` でマイグレーションを生成する。
 
 書き込み担当:
-- english_texts / sentences: ローカルバッチ（登録時）
+- english_texts: ローカルバッチ（登録時）、GPT Site（read_at・is_deleted の更新のみ）
+- sentences: ローカルバッチ（登録時）
 - vocabulary_notebook: GPT Site（単語追加）、ローカルバッチ（meaning の補完のみ）
 - study_sessions / bookmarks: GPT Site
 """
@@ -37,6 +38,7 @@ class EnglishText(Base):
     """英文マスタ（記事単位）。english_text は改行で段落を区切る。
 
     title は論理削除されていない記事の中で一意（同じタイトルの記事は登録を拒否する）。
+    登録後に更新してよいのは read_at・is_deleted のみ（GPT Site が更新する）。
     """
 
     __tablename__ = "english_texts"
@@ -55,6 +57,9 @@ class EnglishText(Base):
     genre: Mapped[str] = mapped_column(Text, nullable=False)  # settings.toml の genres の値
     english_text: Mapped[str] = mapped_column(Text, nullable=False)
     word_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )  # 読了日時。NULLは未読
     is_deleted: Mapped[bool] = is_deleted_column()
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
