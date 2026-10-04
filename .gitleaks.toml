@@ -1,0 +1,14 @@
+# gitleaksの設定。標準ルールに、標準では検出されないPostgreSQL(Neon)接続文字列のルールを追加する。
+[extend]
+useDefault = true
+
+[[rules]]
+id = "postgres-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgres(?:ql)?://[^:\s/]+:([^@\s]+)@'''
+secretGroup = 1
+
+# ドキュメント中のプレースホルダー（例: <password>）は除外する。
+[[rules.allowlists]]
+regexTarget = "secret"
+regexes = ['''^<[^>]+>$''']

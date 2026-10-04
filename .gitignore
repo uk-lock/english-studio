@@ -1,0 +1,14 @@
+.venv/
+
+settings.local.toml
+
+.steering/
+
+.Trash-1000/
+.ipynb_checkpoints/
+
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+intermediate/*
+!intermediate/.gitkeep

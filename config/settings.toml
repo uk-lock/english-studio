@@ -1,0 +1,30 @@
+# 共有設定（Git管理対象）。DB接続文字列などの秘密情報は settings.local.toml に記載する。
+
+[generation]
+# 00-01-generate-articles / 01-01-generate-text で生成する英文の条件
+level = "B2"             # CEFRレベル（A1/A2/B1/B2/C1/C2）
+word_count_lower = 1000   # 語数の下限
+word_count_upper = 1200   # 語数の上限
+article_count = 15        # 00-01-generate-articles で1回に生成する記事数
+
+# ジャンル候補。登録済み記事の少ないジャンルから優先して割り当てる（表記はこのリストの値を使う）
+genres = [
+  "Science",
+  "Technology",
+  "History",
+  "Culture",
+  "Business",
+  "Economics",
+  "Health",
+  "Environment",
+  "Psychology",
+  "Education",
+  "Sports",
+  "Travel",
+  "Food",
+  "Art",
+  "Society",
+  "Fiction", 
+  "Behavioral Economics", 
+  "Geopolitics"
+]
