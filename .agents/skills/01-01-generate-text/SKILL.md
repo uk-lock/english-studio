@@ -34,6 +34,7 @@ genre: <ジャンル>
 ```
 
 - frontmatterの`title`・`level`・`genre`はすべて必須。
+- frontmatterはYAMLとして解釈されず、`src/article.py`が各行を最初の`:`で分割。`title`はコロンを含む場合も引用符で囲まない（例: `title: Water Wars: Rivers That Cross Borders`）。囲むと引用符ごとタイトルとしてDBに登録される。
 - 本文は1行=1段落（改行が段落区切り）。段落内で文ごとに改行しない。空行は無視される。
 - `level`は`[generation]`の値をそのまま記載。
 - `genre`は`[generation]`の`genres`のいずれかを、表記もそのまま記載（`genres`に無い値だと`make split`が非0終了）。
